@@ -1,222 +1,74 @@
-import pandas as pd
 import json
-import os
-import re
-from metrics import calculate_metrics
-from ai_judge import evaluate_with_ai
 
+# ==========================================================
+# 🤖 AI JUDGE FUNCTION
+# ==========================================================
 
-# -------------------------------
-# Helper: Extract JSON from AI response
-# -------------------------------
-def extract_json(text):
-    try:
-        match = re.search(r'\{.*\}', text, re.DOTALL)
-        if match:
-            return json.loads(match.group())
-        else:
-            raise ValueError("No JSON found in AI response")
-    except Exception as e:
-        return {
-            "score": 0,
-            "feedback": f"AI parsing failed: {str(e)}"
-        }
+def evaluate_with_ai(metrics, sample_predictions):
+    """
+    AI judge logic (rule-based for hackathon)
+    MUST return JSON string
+    """
 
-
-# -------------------------------
-# Main Evaluation Function
-# -------------------------------
-def run_evaluation(student_name, file_path):
-
-    print(f"\n🔍 Evaluating: {student_name}")
-
-    # -------------------------------
-    # Step 1: Load file safely
-    # -------------------------------
-    try:
-        df = pd.read_csv(file_path)
-    except Exception as e:
-        return {
-            "student": student_name,
-            "error": f"File read error: {str(e)}"
-        }
-
-    # -------------------------------
-    # Step 2: Validate columns
-    # -------------------------------
-    required_cols = ["actual", "prediction"]
-
-    if not all(col in df.columns for col in required_cols):
-        return {
-            "student": student_name,
-            "error": "Missing required columns: actual, prediction"
-        }
-
-    if len(df) == 0:
-        return {
-            "student": student_name,
-            "error": "Empty prediction file"
-        }
-
-    y_true = df["actual"]
-    y_pred = df["prediction"]
-
-    # -------------------------------
-    # Step 3: Calculate metrics
-    # -------------------------------
-    try:
-        metrics = calculate_metrics(y_true, y_pred)
-    except Exception as e:
-        return {
-            "student": student_name,
-            "error": f"Metric calculation failed: {str(e)}"
-        }
-
-    # -------------------------------
-    # Step 4: AI Evaluation
-    # -------------------------------
-    sample_predictions = df.head(10).to_dict(orient="records")
-
-    try:
-        ai_raw = evaluate_with_ai(metrics, sample_predictions)
-        ai_result = extract_json(ai_raw)
-    except Exception as e:
-        ai_result = {
-            "score": 0,
-            "feedback": f"AI evaluation failed: {str(e)}"
-        }
-
-    # -------------------------------
-    # Step 5: Normalize AI score
-    # -------------------------------
-    ai_score = ai_result.get("score", 0)
-    ai_score_normalized = ai_score / 10  # 0–10 → 0–1
-
-    # -------------------------------
-    # Step 6: Final Score Calculation (Flexible)
-    # -------------------------------
+    accuracy = metrics.get("accuracy", 0)
+    f1 = metrics.get("f1_score", 0)
     problem_type = metrics.get("problem_type", "classification")
 
+    # -------------------------------
+    # Classification scoring
+    # -------------------------------
     if problem_type == "classification":
-        final_score = (
-            metrics.get("accuracy", 0) * 0.5 +
-            metrics.get("f1_score", 0) * 0.3 +
-            ai_score_normalized * 0.2
-        )
 
-    else:  # regression
-        final_score = (
-            (1 / (1 + metrics.get("mse", 1))) * 0.6 +
-            metrics.get("r2_score", 0) * 0.2 +
-            ai_score_normalized * 0.2
-        )
+        if accuracy > 0.9 and f1 > 0.85:
+            score = 9
+            feedback = "Excellent model 🚀 Strong performance."
 
+        elif accuracy > 0.8:
+            score = 7
+            feedback = "Good model 👍 but can improve recall."
+
+        elif accuracy > 0.7:
+            score = 5
+            feedback = "Decent model ⚠️ but missing patterns."
+
+        else:
+            score = 3
+            feedback = "Weak model ❌ Improve features or tuning."
+
+        if f1 < 0.5:
+            feedback += " Model likely biased toward one class."
+
+    # -------------------------------
+    # Regression scoring
+    # -------------------------------
+    else:
+        mse = metrics.get("mse", 1)
+        r2 = metrics.get("r2_score", 0)
+
+        if r2 > 0.9:
+            score = 9
+            feedback = "Excellent regression model 🚀"
+
+        elif r2 > 0.75:
+            score = 7
+            feedback = "Good regression model 👍"
+
+        elif r2 > 0.5:
+            score = 5
+            feedback = "Moderate performance ⚠️"
+
+        else:
+            score = 3
+            feedback = "Poor regression model ❌"
+
+    # -------------------------------
+    # RETURN JSON STRING (IMPORTANT)
+    # -------------------------------
     result = {
-        "student": student_name,
-        "metrics": metrics,
-        "ai_score": ai_score,
-        "feedback": ai_result.get("feedback", ""),
-        "final_score": round(final_score, 4),
-        "problem_type": problem_type
+        "score": score,
+        "feedback": feedback
     }
 
-    print(f"✅ Score for {student_name}: {result['final_score']}")
+    return json.dumps(result)
 
-    return result
-
-
-# -------------------------------
-# Leaderboard Update Function
-# -------------------------------
-def update_leaderboard(result):
-
-    if "error" in result:
-        print(f"❌ Skipping {result['student']} due to error: {result['error']}")
-        return
-
-    path = "evaluations/leaderboard.csv"
-
-    # -------------------------------
-    # Load or create leaderboard
-    # -------------------------------
-    if os.path.exists(path):
-        leaderboard = pd.read_csv(path)
-    else:
-        leaderboard = pd.DataFrame(columns=[
-            "student", "score", "accuracy", "f1_score",
-            "mse", "r2_score", "ai_score", "problem_type"
-        ])
-
-    # -------------------------------
-    # Remove existing entry
-    # -------------------------------
-    leaderboard = leaderboard[leaderboard["student"] != result["student"]]
-
-    # -------------------------------
-    # Add new result
-    # -------------------------------
-    new_row = pd.DataFrame([{
-        "student": result["student"],
-        "score": result["final_score"],
-        "accuracy": result["metrics"].get("accuracy"),
-        "f1_score": result["metrics"].get("f1_score"),
-        "mse": result["metrics"].get("mse"),
-        "r2_score": result["metrics"].get("r2_score"),
-        "ai_score": result["ai_score"],
-        "problem_type": result["problem_type"]
-    }])
-
-    leaderboard = pd.concat([leaderboard, new_row], ignore_index=True)
-
-    # -------------------------------
-    # Sorting with Tie-Break Logic
-    # -------------------------------
-    if leaderboard["problem_type"].iloc[0] == "classification":
-        leaderboard = leaderboard.sort_values(
-            by=["score", "accuracy", "f1_score", "ai_score"],
-            ascending=[False, False, False, False]
-        )
-    else:
-        leaderboard = leaderboard.sort_values(
-            by=["score", "mse", "r2_score", "ai_score"],
-            ascending=[False, True, False, False]
-        )
-
-    # -------------------------------
-    # Save leaderboard
-    # -------------------------------
-    leaderboard.to_csv(path, index=False)
-
-    print(f"🏆 Leaderboard updated for {result['student']}")
-
-
-# -------------------------------
-# Run Evaluation for All Students
-# -------------------------------
-def run_all_evaluations(outputs_folder="outputs"):
-
-    if not os.path.exists(outputs_folder):
-        print("❌ Outputs folder not found")
-        return
-
-    files = [f for f in os.listdir(outputs_folder) if f.endswith("_predictions.csv")]
-
-    if not files:
-        print("⚠️ No prediction files found")
-        return
-
-    for file in files:
-        student_name = file.replace("_predictions.csv", "")
-        file_path = os.path.join(outputs_folder, file)
-
-        result = run_evaluation(student_name, file_path)
-        update_leaderboard(result)
-
-    print("\n🎉 All evaluations completed!")
-
-
-# -------------------------------
-# Entry Point
-# -------------------------------
-if __name__ == "__main__":
-    run_all_evaluations()
+#python evaluations/evaluate.py

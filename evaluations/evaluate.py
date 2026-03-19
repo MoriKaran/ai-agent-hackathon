@@ -2,13 +2,13 @@ import pandas as pd
 import json
 import os
 import re
-from metrics import calculate_metrics
-from ai_judge import evaluate_with_ai
+from evaluations.metrics import calculate_metrics
+from evaluations.ai_judge import evaluate_with_ai
 
 
-# -------------------------------
-# Helper: Extract JSON from AI response
-# -------------------------------
+# ==========================================================
+# 🔍 Extract JSON from AI response
+# ==========================================================
 def extract_json(text):
     try:
         match = re.search(r'\{.*\}', text, re.DOTALL)
@@ -23,15 +23,15 @@ def extract_json(text):
         }
 
 
-# -------------------------------
-# Main Evaluation Function
-# -------------------------------
+# ==========================================================
+# 🧠 Main Evaluation Function
+# ==========================================================
 def run_evaluation(student_name, file_path):
 
     print(f"\n🔍 Evaluating: {student_name}")
 
     # -------------------------------
-    # Step 1: Load file safely
+    # Step 1: Load file
     # -------------------------------
     try:
         df = pd.read_csv(file_path)
@@ -90,10 +90,10 @@ def run_evaluation(student_name, file_path):
     # Step 5: Normalize AI score
     # -------------------------------
     ai_score = ai_result.get("score", 0)
-    ai_score_normalized = ai_score / 10  # convert 0–10 → 0–1
+    ai_score_normalized = ai_score / 10  # 0–10 → 0–1
 
     # -------------------------------
-    # Step 6: Final Score Calculation (FLEXIBLE)
+    # Step 6: Final Score Calculation
     # -------------------------------
     problem_type = metrics.get("problem_type", "classification")
 
@@ -103,10 +103,9 @@ def run_evaluation(student_name, file_path):
             metrics.get("f1_score", 0) * 0.3 +
             ai_score_normalized * 0.2
         )
-
     else:  # regression
         final_score = (
-            (1 / (1 + metrics.get("mse", 1))) * 0.6 +   # lower error = better
+            (1 / (1 + metrics.get("mse", 1))) * 0.6 +
             metrics.get("r2_score", 0) * 0.2 +
             ai_score_normalized * 0.2
         )
@@ -116,7 +115,8 @@ def run_evaluation(student_name, file_path):
         "metrics": metrics,
         "ai_score": ai_score,
         "feedback": ai_result.get("feedback", ""),
-        "final_score": round(final_score, 4)
+        "final_score": round(final_score, 4),
+        "problem_type": problem_type
     }
 
     print(f"✅ Score for {student_name}: {result['final_score']}")
@@ -124,9 +124,9 @@ def run_evaluation(student_name, file_path):
     return result
 
 
-# -------------------------------
-# Leaderboard Update Function
-# -------------------------------
+# ==========================================================
+# 🏆 Leaderboard Update Function
+# ==========================================================
 def update_leaderboard(result):
 
     if "error" in result:
@@ -141,27 +141,49 @@ def update_leaderboard(result):
     if os.path.exists(path):
         leaderboard = pd.read_csv(path)
     else:
-        leaderboard = pd.DataFrame(columns=["student", "score"])
+        leaderboard = pd.DataFrame(columns=[
+            "student", "score", "accuracy", "f1_score",
+            "mse", "r2_score", "ai_score", "feedback", "problem_type"
+        ])
 
     # -------------------------------
-    # Remove existing student entry
+    # Remove old entry
     # -------------------------------
     leaderboard = leaderboard[leaderboard["student"] != result["student"]]
 
     # -------------------------------
-    # Add new result
+    # Add new row
     # -------------------------------
     new_row = pd.DataFrame([{
         "student": result["student"],
-        "score": result["final_score"]
+        "score": result["final_score"],
+        "accuracy": result["metrics"].get("accuracy"),
+        "f1_score": result["metrics"].get("f1_score"),
+        "mse": result["metrics"].get("mse"),
+        "r2_score": result["metrics"].get("r2_score"),
+        "ai_score": result["ai_score"],
+        "feedback": result["feedback"],
+        "problem_type": result["problem_type"]
     }])
 
-    leaderboard = pd.concat([leaderboard, new_row], ignore_index=True)
+    if leaderboard.empty:
+        leaderboard = new_row
+    else:
+        leaderboard = pd.concat([leaderboard, new_row], ignore_index=True)
 
     # -------------------------------
-    # Sort leaderboard
+    # Sorting logic
     # -------------------------------
-    leaderboard = leaderboard.sort_values(by="score", ascending=False)
+    if result["problem_type"] == "classification":
+        leaderboard = leaderboard.sort_values(
+            by=["score", "accuracy", "f1_score", "ai_score"],
+            ascending=[False, False, False, False]
+        )
+    else:
+        leaderboard = leaderboard.sort_values(
+            by=["score", "mse", "r2_score", "ai_score"],
+            ascending=[False, True, False, False]
+        )
 
     # -------------------------------
     # Save leaderboard
@@ -171,16 +193,15 @@ def update_leaderboard(result):
     print(f"🏆 Leaderboard updated for {result['student']}")
 
 
-# -------------------------------
-# Run Evaluation for All Students
-# -------------------------------
+# ==========================================================
+# 🔄 Run Evaluation for All Students
+# ==========================================================
 def run_all_evaluations(outputs_folder="outputs"):
 
     if not os.path.exists(outputs_folder):
         print("❌ Outputs folder not found")
         return
 
-    # Only valid submission files
     files = [f for f in os.listdir(outputs_folder) if f.endswith("_predictions.csv")]
 
     if not files:
@@ -197,8 +218,8 @@ def run_all_evaluations(outputs_folder="outputs"):
     print("\n🎉 All evaluations completed!")
 
 
-# -------------------------------
-# Entry Point
-# -------------------------------
+# ==========================================================
+# 🚀 ENTRY POINT
+# ==========================================================
 if __name__ == "__main__":
     run_all_evaluations()
