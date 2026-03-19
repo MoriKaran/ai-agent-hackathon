@@ -2,8 +2,6 @@
 # 🤖 AI Agent Hackathon
 
 
-![alt text](Thumbnail.png)
-
 
 Welcome to the AI Agent Hackathon!
 
