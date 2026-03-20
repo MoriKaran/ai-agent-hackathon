@@ -6,10 +6,12 @@ Open terminal (VS Code / Codespaces):
 
 git clone (https://github.com/harshitboots/ai-agent-hackathon.git)
 cd ai-agent-hackathon
+
 🔹 STEP 2 — Install Requirements
 pip install -r requirements.txt
-🔹 STEP 3 — Run Notebooks (IMPORTANT)
 
+
+🔹 STEP 3 — Run Notebooks (IMPORTANT)
 Go to notebooks/ and run in order:
 
 📘 1. Data Exploration
