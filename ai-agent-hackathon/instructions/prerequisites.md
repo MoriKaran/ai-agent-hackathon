@@ -4,14 +4,11 @@ Before starting the hackathon, you must:
 Set up your environment
 Understand basic concepts
 Be ready to build your AI agent smoothly
-===================================================================
 💻 1. SYSTEM REQUIREMENTS
 Make sure you have:
 ✅ Laptop (8GB RAM recommended)
 ✅ Stable internet connection
 ✅ Browser (Chrome / Edge preferred)
-====================================================================
-
 🧰 2. REQUIRED SOFTWARE
 🔹 Install Python
 👉 https://www.python.org/downloads/
@@ -23,16 +20,12 @@ Version: Python 3.8 or above
 👉 https://git-scm.com/downloads
 Check installation:
 git --version
-=====================================================================
-
 🌐 3. GITHUB SETUP
 🔹 Step 1 — Create GitHub Account
 👉 https://github.com/
 🔹 Step 2 — Clone Repository
-git clone <https://github.com/harshitboots/ai-agent-hackathon.git>
+git clone <REPO_URL>
 cd ai-agent-hackathon
-
-=====================================================================
 ☁️ 4. USING GITHUB CODESPACES (RECOMMENDED)
 👉 Best option to avoid setup issues
 🔹 Step 1 — Open Codespaces
@@ -43,8 +36,6 @@ pip install -r requirements.txt
 🔹 Step 3 — Open Notebooks
 Go to notebooks/
 Run step-by-step
-
-==================================================================
 🔄 5. GIT COMMANDS (VERY IMPORTANT)
 👉 You don’t need to be an expert, just know these basics:
 🔹 Pull Latest Code
@@ -65,8 +56,6 @@ Pull → Work → Add → Commit → Push
 VS Code Terminal
 OR
 Codespaces Terminal
-
-======================================================================================
 📦 6. REQUIRED LIBRARIES
 Already included:
 pandas
@@ -75,13 +64,9 @@ scikit-learn
 matplotlib
 seaborn
 streamlit
-
-======================================================================================
 🔑 7. OPTIONAL (AI FEATURE)
 If required:
-export OPENAI_API_KEY="your_key_here" (we are avoiding but its always required in real time)
-
-======================================================================================
+export OPENAI_API_KEY="your_key_here"
 📚 8. CONCEPTS YOU SHOULD KNOW
 🧠 Python Basics
 Variables
@@ -121,21 +106,20 @@ st.title()
 st.input()
 st.button()
 
-=================================================================================================================
 🤖 9. HOW TO USE CHATGPT
 
 👉 You are encouraged to use it
 🔥 Example Prompts
-- Suggest features for churn prediction
-- Best model for tabular classification
-- How to improve model accuracy
--why my model overfitting
+Suggest features for churn prediction
+Best model for tabular classification
+How to improve model accuracy
+Why is my model overfitting
 ⚠️ COMMON MISTAKES
+
 ❌ Wrong target
 ❌ Feature mismatch
 ❌ Model not saved
 ❌ Wrong file format
-=====================================================================================================
 
 🧪 10. TEST YOUR SETUP
 python

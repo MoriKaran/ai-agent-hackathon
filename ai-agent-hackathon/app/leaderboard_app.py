@@ -1,5 +1,5 @@
 # ==========================================================
-#  AI HACKATHON LEADERBOARD (ADMIN ONLY)
+# 🏆 AI HACKATHON LEADERBOARD (ADMIN ONLY)
 # ==========================================================
 # ⚠️ IMPORTANT:
 # Students SHOULD NOT modify this file

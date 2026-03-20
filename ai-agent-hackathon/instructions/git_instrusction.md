@@ -6,7 +6,7 @@ Clone the project
 Work on notebooks
 Submit your final output correctly
 Push ONLY your prediction file
-=========================================================================================
+
 STEP 1 — Clone the Repository
 🔹 Option 1 — Using Codespaces (Recommended)
 
@@ -16,7 +16,7 @@ Code → Codespaces → Create Codespace
 
 Open terminal:
 
-git clone https://github.com/harshitboots/ai-agent-hackathon.git
+git clone https://github.com/YOUR-REPO-LINK.git
 cd ai-agent-hackathon
 🔄 STEP 2 — Always Pull Latest Code
 
@@ -26,7 +26,6 @@ git pull origin main
 👉 This ensures:
 You have latest updates
 No conflicts later
-=======================================================================================
 
 🧠 STEP 3 — Work on Notebooks
 Follow instructions in:
@@ -38,7 +37,6 @@ Clean data
 Create features
 Train model
 Generate predictions
-=========================================================================================
 
 📤 STEP 4 — Save Your Output File
 
@@ -55,8 +53,6 @@ Be inside outputs/
 End with _predictions.csv
 Contain columns: actual,prediction
 
-===============================================================================================
-
 🚀 STEP 5 — Push ONLY Your Output File
 ❗ DO NOT USE:
 git add .
@@ -68,7 +64,7 @@ git add outputs/YOURNAME_predictions.csv
 git commit -m "Final submission - YOURNAME"
 git push origin main
 
-=================================================================================================
+
 🔁 STEP 6 — Create Pull Request (PR)
 
 After pushing:
@@ -77,8 +73,6 @@ You will see:
 “Compare & pull request”
 Click:
 👉 Create Pull Request
-
-================================================================================================
 
 🧠 STEP 7 — Wait for Approval
 👉 Organiser will:
